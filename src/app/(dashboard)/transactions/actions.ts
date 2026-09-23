@@ -6,7 +6,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 
 // Server Action untuk mengambil Ringkasan
 export async function getDashboardSummary() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -43,7 +43,7 @@ export async function getDashboardSummary() {
 
 // Server Action untuk mengambil daftar riwayat
 export async function getTransactions(): Promise<Transaction[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -67,7 +67,7 @@ export async function getTransactions(): Promise<Transaction[]> {
 
 // Server Action untuk membuat transaksi baru
 export async function addTransaction(formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -105,7 +105,7 @@ export async function addTransaction(formData: FormData) {
 
 // Server Action untuk mengubah transaksi
 export async function updateTransaction(id: string, formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -144,7 +144,7 @@ export async function updateTransaction(id: string, formData: FormData) {
 
 // Server Action untuk menghapus transaksi
 export async function deleteTransaction(id: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
