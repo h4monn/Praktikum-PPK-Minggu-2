@@ -12,23 +12,23 @@ Untuk memaksimalkan produktivitas dan **mencegah konflik Git (*merge conflict*)*
 
 ```mermaid
 graph TD
-    subgraph Programmer 1: Pondasi, Auth, Sesi & Preferensi
-        P1_A[Supabase SSR Client & Middleware Guard]
-        P1_B[Halaman & Form: Login, Register, Logout]
-        P1_C[Cookie Manager: Preferensi Tema Dark/Light]
-        P1_D[App Shell: Navbar, User State & Theme Toggle]
+    subgraph P1 ["Programmer 1: Pondasi, Auth, Sesi & Preferensi"]
+        P1_A["Supabase SSR Client & Middleware Guard"]
+        P1_B["Halaman & Form: Login, Register, Logout"]
+        P1_C["Cookie Manager: Preferensi Tema Dark/Light"]
+        P1_D["App Shell: Navbar, User State & Theme Toggle"]
     end
 
-    subgraph Programmer 2: Bisnis Transaksi, Dashboard & Database
-        P2_A[Skema PostgreSQL & Kebijakan RLS auth.uid]
-        P2_B[Dashboard Metrics: Saldo, Pemasukan, Pengeluaran]
-        P2_C[CRUD Transaksi: Form Input, Edit & Modal Hapus]
-        P2_D[Komponen Riwayat Transaksi: List & Filter]
+    subgraph P2 ["Programmer 2: Bisnis Transaksi, Dashboard & Database"]
+        P2_A["Skema PostgreSQL & Kebijakan RLS auth.uid"]
+        P2_B["Dashboard Metrics: Saldo, Pemasukan, Pengeluaran"]
+        P2_C["CRUD Transaksi: Form Input, Edit & Modal Hapus"]
+        P2_D["Komponen Riwayat Transaksi: List & Filter"]
     end
 
-    P1_A -->|Menyediakan Sesi Pengguna auth.uid| P2_A
-    P1_D -->|Menampung Konten Halaman| P2_B
-    P1_D -->|Menampung Konten Halaman| P2_D
+    P1_A -->|"Menyediakan Sesi Pengguna auth.uid"| P2_A
+    P1_D -->|"Menampung Konten Halaman"| P2_B
+    P1_D -->|"Menampung Konten Halaman"| P2_D
 ```
 
 - **Programmer 1** bertanggung jawab atas **Pintu Masuk & Keamanan Aplikasi (Auth, Session, Route Guard, Preferensi Cookie Tema, dan Shell UI)**.

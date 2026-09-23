@@ -68,7 +68,7 @@ graph TD
     D -->|Login Berhasil| E[Dashboard DUITku]
     B -- Sesi Masih Aktif --> E
     
-    subgraph Dashboard Utama
+    subgraph DASH ["Dashboard Utama"]
         E --> F[Lihat Ringkasan: Saldo, Pemasukan, Pengeluaran]
         E --> G[Lihat Riwayat Transaksi]
         E --> H[Tambah Transaksi Baru]
