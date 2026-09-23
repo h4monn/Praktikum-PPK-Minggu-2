@@ -7,9 +7,10 @@ interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   transactionId: string | null;
+  onSuccess?: (message: string) => void;
 }
 
-export default function DeleteConfirmModal({ isOpen, onClose, transactionId }: DeleteConfirmModalProps) {
+export default function DeleteConfirmModal({ isOpen, onClose, transactionId, onSuccess }: DeleteConfirmModalProps) {
   const [isPending, startTransition] = useTransition();
 
   if (!isOpen || !transactionId) return null;
@@ -18,6 +19,7 @@ export default function DeleteConfirmModal({ isOpen, onClose, transactionId }: D
     startTransition(async () => {
       try {
         await deleteTransaction(transactionId as string);
+        if (onSuccess) onSuccess('Transaksi berhasil dihapus!');
         onClose();
       } catch (err) {
         console.error(err);

@@ -8,9 +8,10 @@ interface TransactionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialData?: Transaction | null;
+  onSuccess?: (message: string) => void;
 }
 
-export default function TransactionFormModal({ isOpen, onClose, initialData }: TransactionFormModalProps) {
+export default function TransactionFormModal({ isOpen, onClose, initialData, onSuccess }: TransactionFormModalProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +28,10 @@ export default function TransactionFormModal({ isOpen, onClose, initialData }: T
       try {
         if (isEdit && initialData) {
           await updateTransaction(initialData.id, formData);
+          if (onSuccess) onSuccess('Transaksi berhasil diperbarui!');
         } else {
           await addTransaction(formData);
+          if (onSuccess) onSuccess('Transaksi baru berhasil ditambahkan!');
         }
         onClose();
       } catch (err: any) {
