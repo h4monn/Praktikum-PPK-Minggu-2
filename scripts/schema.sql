@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS public.categories (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- if null, it's a default/system category
     name TEXT NOT NULL,
     type VARCHAR(10) NOT NULL CHECK (type IN ('income', 'expense')),
-    icon TEXT,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 COMMENT ON TABLE public.categories IS 'Menyimpan kategori sistem dan kategori kustom pengguna untuk transaksi.';
@@ -184,16 +183,16 @@ BEGIN
     END IF;
 
     -- Create custom categories for dummy user
-    INSERT INTO public.categories (id, user_id, name, type, icon) VALUES 
-    (cat_income_id, dummy_user_id, 'Gaji/Uang Saku', 'income', '💰'),
-    (cat_expense_id, dummy_user_id, 'Makanan & Minuman', 'expense', '🍔');
+    INSERT INTO public.categories (id, user_id, name, type) VALUES 
+    (cat_income_id, dummy_user_id, 'Gaji/Uang Saku', 'income'),
+    (cat_expense_id, dummy_user_id, 'Makanan & Minuman', 'expense');
 
     -- Insert dummy default categories (system categories) if they don't exist
     IF NOT EXISTS (SELECT 1 FROM public.categories WHERE name = 'Lain-lain' AND type = 'income' AND user_id IS NULL) THEN
-        INSERT INTO public.categories (user_id, name, type, icon) VALUES (NULL, 'Lain-lain', 'income', '💵');
+        INSERT INTO public.categories (user_id, name, type) VALUES (NULL, 'Lain-lain', 'income');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM public.categories WHERE name = 'Transportasi' AND type = 'expense' AND user_id IS NULL) THEN
-        INSERT INTO public.categories (user_id, name, type, icon) VALUES (NULL, 'Transportasi', 'expense', '🚗');
+        INSERT INTO public.categories (user_id, name, type) VALUES (NULL, 'Transportasi', 'expense');
     END IF;
 
     -- Masukkan data transaksi dummy untuk dashboard
