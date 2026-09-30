@@ -51,11 +51,11 @@ export default function TransactionList({ transactions, onEdit, onDelete }: Tran
             {transactions.map((tx) => (
               <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300">
-                  {formatDate(tx.date)}
+                  {formatDate(tx.transaction_date)}
                 </td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                    {tx.category}
+                    {tx.category?.icon} {tx.category?.name || 'Uncategorized'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-500 dark:text-gray-400">

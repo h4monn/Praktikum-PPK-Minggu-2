@@ -52,9 +52,12 @@ export async function getTransactions(): Promise<Transaction[]> {
 
   const { data, error } = await supabase
     .from('transactions')
-    .select('*')
+    .select(`
+      *,
+      category:categories(id, name, type, icon)
+    `)
     .eq('user_id', user.id)
-    .order('date', { ascending: false })
+    .order('transaction_date', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -84,14 +87,45 @@ export async function addTransaction(formData: FormData) {
     throw new Error('Missing required fields');
   }
 
+  // Find or create category
+  let category_id;
+  const { data: existingCats } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', category)
+    .eq('type', type)
+    .or(`user_id.eq.${user.id},user_id.is.null`)
+    .limit(1);
+
+  if (existingCats && existingCats.length > 0) {
+    category_id = existingCats[0].id;
+  } else {
+    const { data: newCat, error: catError } = await supabase
+      .from('categories')
+      .insert({
+        user_id: user.id,
+        name: category,
+        type,
+        icon: '📁'
+      })
+      .select('id')
+      .single();
+    
+    if (catError) {
+      console.error('Error creating category:', catError);
+      throw new Error('Failed to create category');
+    }
+    category_id = newCat.id;
+  }
+
   const { error } = await supabase
     .from('transactions')
     .insert({
       user_id: user.id,
       type,
       amount,
-      category,
-      date,
+      category_id,
+      transaction_date: date,
       notes: notes || null
     });
 
@@ -122,13 +156,44 @@ export async function updateTransaction(id: string, formData: FormData) {
     throw new Error('Missing required fields');
   }
 
+  // Find or create category
+  let category_id;
+  const { data: existingCats } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', category)
+    .eq('type', type)
+    .or(`user_id.eq.${user.id},user_id.is.null`)
+    .limit(1);
+
+  if (existingCats && existingCats.length > 0) {
+    category_id = existingCats[0].id;
+  } else {
+    const { data: newCat, error: catError } = await supabase
+      .from('categories')
+      .insert({
+        user_id: user.id,
+        name: category,
+        type,
+        icon: '📁'
+      })
+      .select('id')
+      .single();
+    
+    if (catError) {
+      console.error('Error creating category:', catError);
+      throw new Error('Failed to create category');
+    }
+    category_id = newCat.id;
+  }
+
   const { error } = await supabase
     .from('transactions')
     .update({
       type,
       amount,
-      category,
-      date,
+      category_id,
+      transaction_date: date,
       notes: notes || null
     })
     .eq('id', id)

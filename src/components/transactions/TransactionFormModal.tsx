@@ -100,7 +100,7 @@ export default function TransactionFormModal({ isOpen, onClose, initialData, onS
               <input 
                 type="text" 
                 name="category" 
-                defaultValue={initialData?.category}
+                defaultValue={initialData?.category?.name}
                 required
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Contoh: Makan, Transport, dsb."
@@ -114,7 +114,7 @@ export default function TransactionFormModal({ isOpen, onClose, initialData, onS
               <input 
                 type="date" 
                 name="date" 
-                defaultValue={initialData?.date || new Date().toISOString().split('T')[0]}
+                defaultValue={initialData?.transaction_date || new Date().toISOString().split('T')[0]}
                 required
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
