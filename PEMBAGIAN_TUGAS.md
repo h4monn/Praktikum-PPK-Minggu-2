@@ -102,6 +102,8 @@ src/
 6. **Fitur Pengaturan Anggaran / Budget (FR-10)**:
    - Membuat komponen UI `BudgetFormModal.tsx` yang interaktif (menampilkan form nominal budget).
    - Menambahkan tombol akses/pemicu ke modal tersebut, misalnya pada menu navigasi atau tombol di sebelah profil.
+7. **Pengecekan Interaktivitas & AJAX (Evaluasi)**:
+   - Melakukan pengecekan menyeluruh pada form autentikasi dan komponen yang sudah dibuat sebelumnya agar seluruh proses pengiriman data berjalan secara asinkron (*AJAX / Server Actions dengan `useTransition`*), sehingga halaman tidak dimuat ulang (*reload*) secara penuh.
 
 ### 3.4 Kriteria Selesai (*Definition of Done*) Programmer 1:
 - [ ] Pengguna dapat mendaftar akun baru dan langsung login.
@@ -178,6 +180,8 @@ src/
    - Menambahkan kebijakan RLS pada tabel `monthly_budgets` agar *data isolation* terjaga.
    - Menulis Server Actions: `upsertBudget` (menambah/memperbarui anggaran) dan `getBudget` (mengambil anggaran bulan ini).
    - Membuat komponen `BudgetProgressWidget.tsx` untuk dashboard yang memvisualisasikan secara dinamis persentase pengeluaran bulan ini terhadap anggaran yang ditetapkan (contoh: *Progress Bar*).
+6. **Pengecekan Interaktivitas & AJAX (Evaluasi)**:
+   - Melakukan pengecekan menyeluruh pada form CRUD transaksi, *dashboard*, dan filter agar seluruh perpindahan data (*state*) berjalan mulus menggunakan *AJAX / useTransition*. Memastikan tidak ada *reload* halaman berlebihan pada saat data dimanipulasi.
 
 ### 4.4 Kriteria Selesai (*Definition of Done*) Programmer 2:
 - [ ] Tabel `transactions` dan RLS aktif di Supabase.
