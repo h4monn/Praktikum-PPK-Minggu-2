@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { Transaction, TransactionType } from '@/types/transaction';
+import { Transaction, TransactionType, MonthlyBudget } from '@/types/transaction';
 
 // Server Action untuk mengambil Ringkasan
 export async function getDashboardSummary() {
@@ -54,7 +54,7 @@ export async function getTransactions(): Promise<Transaction[]> {
     .from('transactions')
     .select(`
       *,
-      category:categories(id, name, type, icon)
+      category:categories(id, name, type)
     `)
     .eq('user_id', user.id)
     .order('transaction_date', { ascending: false })
@@ -105,8 +105,7 @@ export async function addTransaction(formData: FormData) {
       .insert({
         user_id: user.id,
         name: category,
-        type,
-        icon: '📁'
+        type
       })
       .select('id')
       .single();
@@ -174,8 +173,7 @@ export async function updateTransaction(id: string, formData: FormData) {
       .insert({
         user_id: user.id,
         name: category,
-        type,
-        icon: '📁'
+        type
       })
       .select('id')
       .single();
@@ -229,3 +227,67 @@ export async function deleteTransaction(id: string) {
 
   revalidatePath('/dashboard');
 }
+
+// Server Action untuk mengambil Anggaran Bulanan aktif
+export async function getCurrentBudget(monthYear?: string): Promise<MonthlyBudget | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const targetMonth = monthYear || new Date().toISOString().slice(0, 7);
+
+  const { data, error } = await supabase
+    .from('monthly_budgets')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('month_year', targetMonth)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching budget:', error);
+    return null;
+  }
+
+  return data as MonthlyBudget | null;
+}
+
+// Server Action untuk menambah atau memperbarui Anggaran Bulanan
+export async function upsertBudget(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  const amount = Number(formData.get('amount'));
+  const month_year = (formData.get('month_year') as string) || new Date().toISOString().slice(0, 7);
+
+  if (isNaN(amount) || amount < 0) {
+    throw new Error('Nominal anggaran harus berupa angka positif.');
+  }
+
+  const { error } = await supabase
+    .from('monthly_budgets')
+    .upsert(
+      {
+        user_id: user.id,
+        month_year,
+        amount,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: 'user_id,month_year' }
+    );
+
+  if (error) {
+    console.error('Error saving budget:', error);
+    throw new Error('Gagal menyimpan anggaran bulanan: ' + error.message);
+  }
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
