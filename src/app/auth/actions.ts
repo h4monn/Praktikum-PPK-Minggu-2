@@ -41,21 +41,21 @@ export async function login(formData: FormData) {
 
     // Jika user ada tetapi identities bernilai [], berarti email SUDAH terdaftar di Supabase -> Password-nya yang salah!
     if (signUpCheck?.user && signUpCheck.user.identities && signUpCheck.user.identities.length === 0) {
-      return { error: 'pwnya salah bos' };
+      return { error: 'Kata sandi salah.' };
     }
 
     // Jika identities tidak kosong, berarti email BELUM terdaftar sebelumnya
     if (signUpCheck?.user && signUpCheck.user.identities && signUpCheck.user.identities.length > 0) {
       // Sesi dummy langsung dibersihkan/dikeluarkan
       await supabase.auth.signOut();
-      return { error: 'Email belum terdaftar' };
+      return { error: 'Email belum terdaftar.' };
     }
   } catch {
     // Abaikan jika terjadi galat saat pengecekan
   }
 
   // Fallback jika tidak terdeteksi via identities
-  return { error: 'Email belum terdaftar atau pwnya salah bos' };
+  return { error: 'Email atau kata sandi tidak valid.' };
 }
 
 export async function signup(formData: FormData) {

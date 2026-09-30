@@ -2,11 +2,11 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { Transaction, TransactionType } from '@/types/transaction';
+import { Transaction, TransactionType, MonthlyBudget } from '@/types/transaction';
 
 // Server Action untuk mengambil Ringkasan
 export async function getDashboardSummary() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -43,7 +43,7 @@ export async function getDashboardSummary() {
 
 // Server Action untuk mengambil daftar riwayat
 export async function getTransactions(): Promise<Transaction[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -52,9 +52,12 @@ export async function getTransactions(): Promise<Transaction[]> {
 
   const { data, error } = await supabase
     .from('transactions')
-    .select('*')
+    .select(`
+      *,
+      category:categories(id, name, type)
+    `)
     .eq('user_id', user.id)
-    .order('date', { ascending: false })
+    .order('transaction_date', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -67,7 +70,7 @@ export async function getTransactions(): Promise<Transaction[]> {
 
 // Server Action untuk membuat transaksi baru
 export async function addTransaction(formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -84,14 +87,44 @@ export async function addTransaction(formData: FormData) {
     throw new Error('Missing required fields');
   }
 
+  // Find or create category
+  let category_id;
+  const { data: existingCats } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', category)
+    .eq('type', type)
+    .or(`user_id.eq.${user.id},user_id.is.null`)
+    .limit(1);
+
+  if (existingCats && existingCats.length > 0) {
+    category_id = existingCats[0].id;
+  } else {
+    const { data: newCat, error: catError } = await supabase
+      .from('categories')
+      .insert({
+        user_id: user.id,
+        name: category,
+        type
+      })
+      .select('id')
+      .single();
+    
+    if (catError) {
+      console.error('Error creating category:', catError);
+      throw new Error('Failed to create category');
+    }
+    category_id = newCat.id;
+  }
+
   const { error } = await supabase
     .from('transactions')
     .insert({
       user_id: user.id,
       type,
       amount,
-      category,
-      date,
+      category_id,
+      transaction_date: date,
       notes: notes || null
     });
 
@@ -105,7 +138,7 @@ export async function addTransaction(formData: FormData) {
 
 // Server Action untuk mengubah transaksi
 export async function updateTransaction(id: string, formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -122,13 +155,43 @@ export async function updateTransaction(id: string, formData: FormData) {
     throw new Error('Missing required fields');
   }
 
+  // Find or create category
+  let category_id;
+  const { data: existingCats } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', category)
+    .eq('type', type)
+    .or(`user_id.eq.${user.id},user_id.is.null`)
+    .limit(1);
+
+  if (existingCats && existingCats.length > 0) {
+    category_id = existingCats[0].id;
+  } else {
+    const { data: newCat, error: catError } = await supabase
+      .from('categories')
+      .insert({
+        user_id: user.id,
+        name: category,
+        type
+      })
+      .select('id')
+      .single();
+    
+    if (catError) {
+      console.error('Error creating category:', catError);
+      throw new Error('Failed to create category');
+    }
+    category_id = newCat.id;
+  }
+
   const { error } = await supabase
     .from('transactions')
     .update({
       type,
       amount,
-      category,
-      date,
+      category_id,
+      transaction_date: date,
       notes: notes || null
     })
     .eq('id', id)
@@ -144,7 +207,7 @@ export async function updateTransaction(id: string, formData: FormData) {
 
 // Server Action untuk menghapus transaksi
 export async function deleteTransaction(id: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -164,3 +227,67 @@ export async function deleteTransaction(id: string) {
 
   revalidatePath('/dashboard');
 }
+
+// Server Action untuk mengambil Anggaran Bulanan aktif
+export async function getCurrentBudget(monthYear?: string): Promise<MonthlyBudget | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const targetMonth = monthYear || new Date().toISOString().slice(0, 7);
+
+  const { data, error } = await supabase
+    .from('monthly_budgets')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('month_year', targetMonth)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching budget:', error);
+    return null;
+  }
+
+  return data as MonthlyBudget | null;
+}
+
+// Server Action untuk menambah atau memperbarui Anggaran Bulanan
+export async function upsertBudget(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  const amount = Number(formData.get('amount'));
+  const month_year = (formData.get('month_year') as string) || new Date().toISOString().slice(0, 7);
+
+  if (isNaN(amount) || amount < 0) {
+    throw new Error('Nominal anggaran harus berupa angka positif.');
+  }
+
+  const { error } = await supabase
+    .from('monthly_budgets')
+    .upsert(
+      {
+        user_id: user.id,
+        month_year,
+        amount,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: 'user_id,month_year' }
+    );
+
+  if (error) {
+    console.error('Error saving budget:', error);
+    throw new Error('Gagal menyimpan anggaran bulanan: ' + error.message);
+  }
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+

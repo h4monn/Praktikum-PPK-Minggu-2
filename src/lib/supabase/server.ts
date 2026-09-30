@@ -1,31 +1,27 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-// MOCKUP P2: Dibuat khusus untuk pengujian Programmer 2.
-// Programmer 1 silakan timpa file ini dengan @supabase/ssr asli Anda kelak.
+export async function createClient() {
+  const cookieStore = await cookies();
 
-export const createClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
-
-  // MOCK AUTH: Memanipulasi fungsi getUser agar selalu mengembalikan dummy user
-  // (Hal ini diperlukan karena kita belum punya form login yang berfungsi dan RLS bergantung pada auth.uid)
-  const originalGetUser = supabase.auth.getUser.bind(supabase.auth);
-  
-  supabase.auth.getUser = async () => {
-    return {
-      data: {
-        user: {
-          id: '11111111-1111-1111-1111-111111111111',
-          aud: 'authenticated',
-          role: 'authenticated',
-          email: 'dummy@duitku.local'
-        } as any
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Dipanggil dari Server Component, diabaikan karena middleware memperbarui cookie
+          }
+        },
       },
-      error: null
-    };
-  };
-
-  return supabase;
-};
+    }
+  );
+}

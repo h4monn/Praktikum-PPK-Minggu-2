@@ -49,7 +49,8 @@ graph TD
 | **FR-07** | Hapus Transaksi (*Delete*) | **Programmer 2** | Aksi delete transaksi beserta dialog konfirmasi. |
 | **FR-08** | Preferensi Tema (Cookie) | **Programmer 1** | Manajemen cookie `duitku_theme` (Dark/Light) & integrasi CSS. |
 | **FR-09** | Logout Pengguna | **Programmer 1** | Server Action logout & pembersihan cookie sesi. |
-| **NFR-01** | Data Isolation via RLS | **Programmer 2** | Script DDL tabel `transactions` & RLS `auth.uid() = user_id`. |
+| **FR-10** | Anggaran Bulanan (Budget) | **P1 & P2** | P1: Komponen Form Modal. P2: Skema DB & Widget Progress di Dashboard. |
+| **NFR-01** | Data Isolation via RLS | **Programmer 2** | Script DDL tabel `transactions` & `budgets` dengan RLS `auth.uid() = user_id`. |
 | **NFR-02** | Session Persistence & Guard | **Programmer 1** | Next.js `middleware.ts` untuk proteksi rute publik vs privat. |
 | **NFR-03** | Cookie Compliance | **Programmer 1** | Pengaturan atribut cookie (`Path`, `SameSite`, `Max-Age`). |
 | **NFR-04** | Usability & Antarmuka Bersih | **Bersama (P1 & P2)** | Konsistensi UI menggunakan Tailwind CSS v4 & responsif. |
@@ -98,6 +99,11 @@ src/
    - Implementasikan fungsi baca/tulis cookie `duitku_theme` (`light` | `dark`).
    - Sediakan tombol ganti tema (*toggle*) pada komponen `ThemeToggle.tsx`.
    - Pastikan tema aktif diinject pada tag `<html>` atau `<body>` di `layout.tsx` agar tidak terjadi *flickering* saat reload.
+6. **Fitur Pengaturan Anggaran / Budget (FR-10)**:
+   - Membuat komponen UI `BudgetFormModal.tsx` yang interaktif (menampilkan form nominal budget).
+   - Menambahkan tombol akses/pemicu ke modal tersebut, misalnya pada menu navigasi atau tombol di sebelah profil.
+7. **Pengecekan Interaktivitas & AJAX (Evaluasi)**:
+   - Melakukan pengecekan menyeluruh pada form autentikasi dan komponen yang sudah dibuat sebelumnya agar seluruh proses pengiriman data berjalan secara asinkron (*AJAX / Server Actions dengan `useTransition`*), sehingga halaman tidak dimuat ulang (*reload*) secara penuh.
 
 ### 3.4 Kriteria Selesai (*Definition of Done*) Programmer 1:
 - [ ] Pengguna dapat mendaftar akun baru dan langsung login.
@@ -105,6 +111,7 @@ src/
 - [ ] Pengguna yang sudah login tetap bertahan sesinya saat tab/browser di-refresh.
 - [ ] Mengubah tema (Dark/Light) berhasil menyimpan cookie `duitku_theme` dan bertahan setelah halaman di-reload.
 - [ ] Tombol logout berhasil mengeluarkan sesi pengguna.
+- [ ] Komponen form pengaturan Budget (Modal/Dialog) selesai didesain secara visual dan terintegrasi di Navbar.
 
 ---
 
@@ -168,6 +175,13 @@ src/
 4. **Operasi Edit & Hapus Transaksi (`FR-06 & FR-07`)**:
    - Fitur edit: mengambil data transaksi terpilih ke dalam modal form dan memperbaruinya.
    - Fitur hapus: dialog konfirmasi "Apakah Anda yakin ingin menghapus transaksi ini?", dilanjutkan penghapusan data.
+5. **Skema & Logika Anggaran Bulanan / Budget (FR-10)**:
+   - Membuat tabel baru `monthly_budgets` (id, user_id, month_year, amount, created_at, updated_at).
+   - Menambahkan kebijakan RLS pada tabel `monthly_budgets` agar *data isolation* terjaga.
+   - Menulis Server Actions: `upsertBudget` (menambah/memperbarui anggaran) dan `getBudget` (mengambil anggaran bulan ini).
+   - Membuat komponen `BudgetProgressWidget.tsx` untuk dashboard yang memvisualisasikan secara dinamis persentase pengeluaran bulan ini terhadap anggaran yang ditetapkan (contoh: *Progress Bar*).
+6. **Pengecekan Interaktivitas & AJAX (Evaluasi)**:
+   - Melakukan pengecekan menyeluruh pada form CRUD transaksi, *dashboard*, dan filter agar seluruh perpindahan data (*state*) berjalan mulus menggunakan *AJAX / useTransition*. Memastikan tidak ada *reload* halaman berlebihan pada saat data dimanipulasi.
 
 ### 4.4 Kriteria Selesai (*Definition of Done*) Programmer 2:
 - [ ] Tabel `transactions` dan RLS aktif di Supabase.
