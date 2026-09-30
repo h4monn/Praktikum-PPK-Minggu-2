@@ -43,6 +43,7 @@ Aplikasi berfokus pada:
 | **FR-07** | **Hapus Transaksi (Delete)** | Pengguna dapat menghapus data transaksi dengan konfirmasi dialog untuk mencegah ketidaksengajaan. | Wajib (*Must*) |
 | **FR-08** | **Preferensi Cookie (Tema)** | Aplikasi menyimpan preferensi tema antarmuka (*Light Mode* / *Dark Mode*) ke dalam browser cookie sehingga preferensi tetap terjaga saat browser ditutup/dimuat ulang. | Wajib (*Must*) |
 | **FR-09** | **Logout Pengguna** | Pengguna dapat keluar dari akun dan membersihkan sesi aktif saat ini. | Wajib (*Must*) |
+| **FR-10** | **Anggaran Bulanan (Budgeting)** | Pengguna dapat menetapkan nominal anggaran pengeluaran untuk bulan berjalan. Aplikasi menampilkan indikator (*progress bar*) seberapa besar pengeluaran saat ini dibandingkan dengan anggaran yang telah ditetapkan. | Wajib (*Must*) |
 
 ---
 
@@ -75,6 +76,7 @@ graph TD
         E --> I[Ubah Transaksi]
         E --> J[Hapus Transaksi]
         E --> K[Ubah Preferensi Tema Light/Dark - Simpan ke Cookie]
+        E --> M[Tetapkan Anggaran Bulanan - Budget]
     end
     
     E --> L[Logout Akun] --> D
