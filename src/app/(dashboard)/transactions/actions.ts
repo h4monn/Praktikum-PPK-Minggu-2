@@ -68,6 +68,24 @@ export async function getTransactions(): Promise<Transaction[]> {
   return data as Transaction[];
 }
 
+// Helper untuk menentukan icon kategori mahasiswa secara otomatis
+function getCategoryIcon(name: string, type: TransactionType): string {
+  const lower = name.toLowerCase();
+  if (lower.includes('makan') || lower.includes('minum') || lower.includes('food') || lower.includes('kopi')) return '🍔';
+  if (lower.includes('transport') || lower.includes('bensin') || lower.includes('ojek') || lower.includes('bus') || lower.includes('kereta')) return '🚗';
+  if (lower.includes('kos') || lower.includes('sewa') || lower.includes('kost') || lower.includes('kontrakan')) return '🏠';
+  if (lower.includes('kuliah') || lower.includes('buku') || lower.includes('spp') || lower.includes('ukt') || lower.includes('fotokopi') || lower.includes('alat tulis')) return '📚';
+  if (lower.includes('belanja') || lower.includes('pasar') || lower.includes('swalayan')) return '🛒';
+  if (lower.includes('hiburan') || lower.includes('game') || lower.includes('nonton') || lower.includes('liburan') || lower.includes('staycation')) return '🎮';
+  if (lower.includes('sehat') || lower.includes('obat') || lower.includes('dokter') || lower.includes('klinik')) return '💊';
+  if (lower.includes('gaji') || lower.includes('upah')) return '💰';
+  if (lower.includes('uang saku') || lower.includes('saku') || lower.includes('transferan') || lower.includes('ortu')) return '💵';
+  if (lower.includes('beasiswa')) return '🎓';
+  if (lower.includes('freelance') || lower.includes('proyek') || lower.includes('project')) return '💻';
+  if (lower.includes('hadiah') || lower.includes('bonus') || lower.includes('thr')) return '🎁';
+  return type === 'income' ? '📈' : '📉';
+}
+
 // Server Action untuk membuat transaksi baru
 export async function addTransaction(formData: FormData) {
   const supabase = await createClient();
@@ -79,20 +97,26 @@ export async function addTransaction(formData: FormData) {
 
   const type = formData.get('type') as TransactionType;
   const amount = Number(formData.get('amount'));
-  const category = formData.get('category') as string;
+  const categoryRaw = formData.get('category') as string;
   const date = formData.get('date') as string;
   const notes = formData.get('notes') as string;
 
+  const category = categoryRaw?.trim();
+
   if (!type || !amount || !category || !date) {
-    throw new Error('Missing required fields');
+    throw new Error('Semua data bertanda bintang wajib diisi');
   }
 
-  // Find or create category
+  if (amount <= 0 || isNaN(amount)) {
+    throw new Error('Nominal transaksi harus lebih besar dari 0');
+  }
+
+  // Cari atau buat kategori
   let category_id;
   const { data: existingCats } = await supabase
     .from('categories')
     .select('id')
-    .eq('name', category)
+    .ilike('name', category)
     .eq('type', type)
     .or(`user_id.eq.${user.id},user_id.is.null`)
     .limit(1);
@@ -100,6 +124,7 @@ export async function addTransaction(formData: FormData) {
   if (existingCats && existingCats.length > 0) {
     category_id = existingCats[0].id;
   } else {
+    const icon = getCategoryIcon(category, type);
     const { data: newCat, error: catError } = await supabase
       .from('categories')
       .insert({
@@ -112,7 +137,7 @@ export async function addTransaction(formData: FormData) {
     
     if (catError) {
       console.error('Error creating category:', catError);
-      throw new Error('Failed to create category');
+      throw new Error('Gagal membuat kategori baru');
     }
     category_id = newCat.id;
   }
@@ -125,12 +150,12 @@ export async function addTransaction(formData: FormData) {
       amount,
       category_id,
       transaction_date: date,
-      notes: notes || null
+      notes: notes?.trim() || null
     });
 
   if (error) {
     console.error('Error adding transaction:', error);
-    throw new Error('Failed to add transaction');
+    throw new Error('Gagal menambahkan transaksi');
   }
 
   revalidatePath('/dashboard');
@@ -147,20 +172,26 @@ export async function updateTransaction(id: string, formData: FormData) {
 
   const type = formData.get('type') as TransactionType;
   const amount = Number(formData.get('amount'));
-  const category = formData.get('category') as string;
+  const categoryRaw = formData.get('category') as string;
   const date = formData.get('date') as string;
   const notes = formData.get('notes') as string;
 
+  const category = categoryRaw?.trim();
+
   if (!type || !amount || !category || !date) {
-    throw new Error('Missing required fields');
+    throw new Error('Semua data bertanda bintang wajib diisi');
   }
 
-  // Find or create category
+  if (amount <= 0 || isNaN(amount)) {
+    throw new Error('Nominal transaksi harus lebih besar dari 0');
+  }
+
+  // Cari atau buat kategori
   let category_id;
   const { data: existingCats } = await supabase
     .from('categories')
     .select('id')
-    .eq('name', category)
+    .ilike('name', category)
     .eq('type', type)
     .or(`user_id.eq.${user.id},user_id.is.null`)
     .limit(1);
@@ -168,6 +199,7 @@ export async function updateTransaction(id: string, formData: FormData) {
   if (existingCats && existingCats.length > 0) {
     category_id = existingCats[0].id;
   } else {
+    const icon = getCategoryIcon(category, type);
     const { data: newCat, error: catError } = await supabase
       .from('categories')
       .insert({
@@ -180,7 +212,7 @@ export async function updateTransaction(id: string, formData: FormData) {
     
     if (catError) {
       console.error('Error creating category:', catError);
-      throw new Error('Failed to create category');
+      throw new Error('Gagal membuat kategori baru');
     }
     category_id = newCat.id;
   }
@@ -192,14 +224,14 @@ export async function updateTransaction(id: string, formData: FormData) {
       amount,
       category_id,
       transaction_date: date,
-      notes: notes || null
+      notes: notes?.trim() || null
     })
     .eq('id', id)
     .eq('user_id', user.id);
 
   if (error) {
     console.error('Error updating transaction:', error);
-    throw new Error('Failed to update transaction');
+    throw new Error('Gagal memperbarui transaksi');
   }
 
   revalidatePath('/dashboard');
@@ -222,7 +254,7 @@ export async function deleteTransaction(id: string) {
 
   if (error) {
     console.error('Error deleting transaction:', error);
-    throw new Error('Failed to delete transaction');
+    throw new Error('Gagal menghapus transaksi');
   }
 
   revalidatePath('/dashboard');

@@ -32,30 +32,14 @@ export async function login(formData: FormData) {
     };
   }
 
-  // 3. Pengecekan spesifik: Membedakan apakah email belum terdaftar ATAU kata sandi yang salah
-  try {
-    const { data: signUpCheck } = await supabase.auth.signUp({
-      email,
-      password: '___dummy_check_password_123456___',
-    });
-
-    // Jika user ada tetapi identities bernilai [], berarti email SUDAH terdaftar di Supabase -> Password-nya yang salah!
-    if (signUpCheck?.user && signUpCheck.user.identities && signUpCheck.user.identities.length === 0) {
-      return { error: 'Kata sandi salah.' };
-    }
-
-    // Jika identities tidak kosong, berarti email BELUM terdaftar sebelumnya
-    if (signUpCheck?.user && signUpCheck.user.identities && signUpCheck.user.identities.length > 0) {
-      // Sesi dummy langsung dibersihkan/dikeluarkan
-      await supabase.auth.signOut();
-      return { error: 'Email belum terdaftar.' };
-    }
-  } catch {
-    // Abaikan jika terjadi galat saat pengecekan
+  if (
+    signInError.message.toLowerCase().includes('invalid login credentials') ||
+    signInError.message.toLowerCase().includes('invalid_grant')
+  ) {
+    return { error: 'Email atau kata sandi salah.' };
   }
 
-  // Fallback jika tidak terdeteksi via identities
-  return { error: 'Email atau kata sandi tidak valid.' };
+  return { error: signInError.message || 'Email atau kata sandi tidak valid.' };
 }
 
 export async function signup(formData: FormData) {
