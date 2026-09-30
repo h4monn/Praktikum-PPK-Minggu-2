@@ -10,6 +10,7 @@ export interface Category {
   user_id: string | null; // null for system/default categories
   name: string;
   type: TransactionType;
+  icon?: string | null;
   created_at: string;
 }
 

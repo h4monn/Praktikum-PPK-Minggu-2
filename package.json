@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check-db": "node scripts/check-db.mjs"
+    "check-db": "node scripts/check-db.mjs",
+    "test:p2": "node scripts/automated-test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
