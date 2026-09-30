@@ -150,10 +150,9 @@ export default function TransactionList({
                 <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300 font-medium">
                   {formatDate(tx.transaction_date)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                    <span>{tx.category?.icon || (tx.type === 'income' ? '📈' : '📉')}</span>
-                    <span>{tx.category?.name || 'Uncategorized'}</span>
+                <td className="px-6 py-4">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                    {tx.category?.name || 'Uncategorized'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-500 dark:text-gray-400 max-w-xs truncate">

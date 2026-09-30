@@ -10,7 +10,6 @@ export interface Category {
   user_id: string | null; // null for system/default categories
   name: string;
   type: TransactionType;
-  icon: string | null;
   created_at: string;
 }
 
@@ -45,3 +44,14 @@ export interface FinancialSummary {
   totalIncome: number;
   totalExpense: number;
 }
+
+// Represents a monthly budget in the database
+export interface MonthlyBudget {
+  id: string;
+  user_id: string;
+  month_year: string; // Format: 'YYYY-MM'
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
