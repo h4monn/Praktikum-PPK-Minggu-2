@@ -38,6 +38,18 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 );
 COMMENT ON TABLE public.transactions IS 'Menyimpan riwayat transaksi (pemasukan/pengeluaran) pengguna.';
 
+-- 4. Create table `monthly_budgets`
+CREATE TABLE IF NOT EXISTS public.monthly_budgets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    month_year VARCHAR(7) NOT NULL, -- Format: 'YYYY-MM'
+    amount NUMERIC NOT NULL CHECK (amount >= 0),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, month_year)
+);
+COMMENT ON TABLE public.monthly_budgets IS 'Menyimpan anggaran pengeluaran bulanan pengguna.';
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS)
 -- ==========================================
@@ -82,6 +94,13 @@ TO authenticated
 USING (auth.uid() = user_id) 
 WITH CHECK (auth.uid() = user_id);
 
+-- Policy for `monthly_budgets`
+CREATE POLICY "Users can manage own budgets" 
+ON public.monthly_budgets FOR ALL 
+TO authenticated 
+USING (auth.uid() = user_id) 
+WITH CHECK (auth.uid() = user_id);
+
 -- ==========================================
 -- TRIGGERS
 -- ==========================================
@@ -119,6 +138,11 @@ CREATE TRIGGER set_transactions_updated_at
 DROP TRIGGER IF EXISTS set_profiles_updated_at ON public.profiles;
 CREATE TRIGGER set_profiles_updated_at
   BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE PROCEDURE public.set_updated_at();
+
+DROP TRIGGER IF EXISTS set_monthly_budgets_updated_at ON public.monthly_budgets;
+CREATE TRIGGER set_monthly_budgets_updated_at
+  BEFORE UPDATE ON public.monthly_budgets
   FOR EACH ROW EXECUTE PROCEDURE public.set_updated_at();
 
 -- ==========================================
